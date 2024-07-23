@@ -46,7 +46,7 @@ const convertRecentEventDatesToDelta = () => {
 };
 
 const poll = async () => {
-  console.log(`[${new Date()}] poll: ${getEnvVar('ST_HOOK_ROOT')}`);
+  console.log(`[${new Date()}] poll: ${getEnvVar('ST_URL')}`);
   const { events, seenIds } = await fetchNewEvents(state.seenIds);
   const hooks = await collectHooks();
   const monitoredFolders = new Set(hooks.map(x => x.folder));
