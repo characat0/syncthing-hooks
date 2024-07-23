@@ -2,6 +2,7 @@
 
 const { fetchNewEvents } = require('./api');
 const { collectHooks, runHook } = require('./hooks');
+const { getEnvVar } = require('./env.js');
 
 require('dotenv').config();
 
@@ -45,6 +46,7 @@ const convertRecentEventDatesToDelta = () => {
 };
 
 const poll = async () => {
+  console.log(`[${new Date()}] poll: ${getEnvVar('ST_HOOK_ROOT')}`);
   const { events, seenIds } = await fetchNewEvents(state.seenIds);
   const hooks = await collectHooks();
   const monitoredFolders = new Set(hooks.map(x => x.folder));
