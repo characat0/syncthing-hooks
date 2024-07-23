@@ -46,9 +46,9 @@ const waitForProcess = childProcess =>
     childProcess.once('error', error => reject(error));
   });
 
-const runHook = hook =>
+const runHook = (hook, metadata) =>
   waitForProcess(
-    spawn(hook.path, [], {
+    spawn(`"${hook.path}"`, Object.entries(metadata).map(([k, v], _) => [`--${k}`, JSON.stringify(v).replaceAll(' ', '%20')]).flat(), {
       cwd: path.dirname(hook.path),
       shell: true,
       stdio: [process.stdin, process.stdout, process.stderr],

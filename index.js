@@ -13,14 +13,17 @@ const state = {
 
 const getMostRecentEvents = (events, monitoredFolders) => {
   const mostRecentEventForFolder = events
+    .filter(x => x.type == "ItemFinished")
     .filter(x => x.data && x.data.folder)
     .filter(x => monitoredFolders.has(x.data.folder))
     .reduce(
       (acc, x) => {
         const date = new Date(x.time);
-        const existingDate = acc[x.data.folder];
-        acc[x.data.folder] =
-          existingDate && existingDate > date ? existingDate : date;
+        const existingMetadata = acc[x.data.folder];
+        acc[x.data.folder] = {
+          date: existingMetadata && existingMetadata.date > date ? existingMetadata.date : date,
+          ...x.data,
+        };
         return acc;
       },
       state.mostRecentEventForFolder
@@ -34,7 +37,7 @@ const getMostRecentEvents = (events, monitoredFolders) => {
 const convertRecentEventDatesToDelta = () => {
   const now = new Date().getTime();
   return Object.entries(state.mostRecentEventForFolder)
-    .map(([folder, date]) => [folder, now - date.getTime()])
+    .map(([folder, metadata]) => [folder, now - metadata.date.getTime()])
     .reduce((acc, [path, delta]) => {
       acc[path] = delta;
       return acc;
@@ -60,9 +63,11 @@ const poll = async () => {
             `hook "${hook.path}" was skipped because it is already running`
           );
         } else {
+          const metadata = state.mostRecentEventForFolder[hook.folder];
+          console.log(`metadata: ${JSON.stringify(metadata)}`);
           delete state.mostRecentEventForFolder[hook.folder];
           console.log(`running hook "${hook.path}"`);
-          const promise = runHook(hook);
+          const promise = runHook(hook, metadata);
           state.promisesForHooks[hook.path] = promise;
           promise
             .then(() => {
@@ -83,5 +88,5 @@ const poll = async () => {
   state.seenIds = seenIds;
 };
 
-setInterval(poll, 30000);
+setInterval(poll, 3000);
 poll();
